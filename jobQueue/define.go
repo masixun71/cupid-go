@@ -12,3 +12,5 @@ type WorkerChan chan JobChan
 
 
 var ProcessJobQueue JobChan
+
+var FailJobQueue JobChan

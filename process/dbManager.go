@@ -6,6 +6,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"strconv"
 	"../jobQueue"
+	"time"
 )
 
 var (
@@ -19,6 +20,7 @@ func InitDb(maxIdleConns int) {
 		panic(err)
 	}
 	db.SetMaxIdleConns(maxIdleConns + 1)
+	db.SetConnMaxLifetime(time.Minute * 10)
 	srcDb = db
 
 	lens := len(Config.Des)
@@ -29,6 +31,7 @@ func InitDb(maxIdleConns int) {
 			panic(err)
 		}
 		db.SetMaxIdleConns(maxIdleConns)
+		db.SetConnMaxLifetime(time.Minute * 10)
 		desDb[i] = db
 	}
 }
@@ -41,12 +44,36 @@ func GetMaxId() int {
 	var maxId int
 	for rows.Next() {
 		err = rows.Scan(&maxId)
-		fmt.Println(maxId)
+		fmt.Println("maxId", maxId)
 		CheckErr(err)
 	}
 
 	return maxId
 }
+
+func GetUpdateId() []int {
+
+	end := time.Now()
+	d, _ := time.ParseDuration("-"+ strconv.Itoa(Config.Src.UpdateScanSecond) + "s")
+	start := end.Add(d)
+	updateSql := "SELECT id from " + Config.Src.Table + " where " + Config.Src.UpdateColumn + " between '" + start.Format(Config.Src.UpdateTimeFormate) + "' and '" + end.Format(Config.Src.UpdateTimeFormate) + "'"
+	rows, err := srcDb.Query(updateSql)
+	defer rows.Close()
+	CheckErr(err)
+	var updateId int
+	ids := make([]int, 0)
+
+	for rows.Next() {
+		err = rows.Scan(&updateId)
+		fmt.Println("updateId", updateId)
+		CheckErr(err)
+		ids = append(ids, updateId)
+	}
+
+	return ids
+}
+
+
 
 func CompareColumn(srcId uint) {
 
@@ -112,7 +139,7 @@ func query(db *sql.DB, sql string) map[string]interface{} {
 
 func CheckErr(err error) {
 	if err != nil {
-		panic(err)
 		fmt.Println("err:", err)
+		panic(err)
 	}
 }
