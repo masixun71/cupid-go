@@ -36,12 +36,8 @@ var Config = struct {
 	}
 }{}
 
-var callbackChan jobQueue.JobChan
-
-
 type Process struct {
 	TaskDispatcher     *worker.Dispatcher
-	CallbackDispatcher *worker.Dispatcher
 }
 
 func NewProcess(configPath string) *Process {
@@ -49,16 +45,16 @@ func NewProcess(configPath string) *Process {
 
 	return &Process{
 		TaskDispatcher:     worker.NewDispatcher(Config.WorkerNumber),
-		CallbackDispatcher: worker.NewDispatcher(1),
 	}
 }
 
 func (p *Process) Run() {
+
+	jobQueue.ProcessJobQueue = make(jobQueue.JobChan)
+
 	p.TaskDispatcher.Run()
-	p.CallbackDispatcher.Run()
 	InitDb(Config.WorkerNumber)
 	p.initTimer()
-	p.initCallbackChan()
 
 }
 
@@ -94,17 +90,5 @@ func (p *Process) initTimer() {
 			}
 		}(tUpdate)
 	}
-
-}
-
-func (p *Process) initCallbackChan() {
-	callbackChan = make(jobQueue.JobChan, 20)
-
-	go func() {
-		for {
-			job := <- callbackChan
-			p.CallbackDispatcher.Consume(job)
-		}
-	}()
 
 }

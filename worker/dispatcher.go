@@ -9,17 +9,16 @@ type Dispatcher struct {
 	workers      []*Worker
 	quit         chan bool
 	workerNumber int
-	jobQueue     jobQueue.JobChan
 	workerPool   jobQueue.WorkerChan
 }
 
 func NewDispatcher(workerNumber int) *Dispatcher {
 
+
 	return &Dispatcher{
 		workers:      make([]*Worker, 0),
 		quit:         make(chan bool),
 		workerNumber: workerNumber,
-		jobQueue: make(jobQueue.JobChan),
 		workerPool: make(jobQueue.WorkerChan, workerNumber),
 	}
 }
@@ -34,7 +33,7 @@ func (d *Dispatcher) Run() {
 	go func() {
 		for {
 			select {
-			case job := <-d.jobQueue:
+			case job := <-jobQueue.ProcessJobQueue:
 					jobChan := <-d.workerPool
 					jobChan <- job
 				// stop dispatcher
@@ -47,5 +46,5 @@ func (d *Dispatcher) Run() {
 }
 
 func (d *Dispatcher) Consume(job jobQueue.Job)  {
-	d.jobQueue <- job
+	jobQueue.ProcessJobQueue <- job
 }

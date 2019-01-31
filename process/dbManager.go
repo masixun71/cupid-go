@@ -5,6 +5,7 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"strconv"
+	"../jobQueue"
 )
 
 var (
@@ -57,13 +58,16 @@ func CompareColumn(srcId uint) {
 			desArray := query(desDb[i], "SELECT * FROM "+Config.Des[i].Table+" where "+Config.Des[i].ByColumn+"= "+ srcArray[Config.Src.ByColumn].(string))
 			if len(desArray) == 0 {
 				fmt.Println(srcId, "缺少数据:", srcArray)
+				jobQueue.ProcessJobQueue <- &CallbackJob{types:INSERT, srcArray:srcArray,callbackUrl:Config.Des[i].CallbackNotification.Url}
 			} else {
 				for keyColumn, Column := range Config.Des[i].Columns {
 					_, okSrc := srcArray[keyColumn]
 					_, okDes := desArray[Column]
 					if !okSrc || !okDes {
 						fmt.Println(srcId,"数据对不上:", srcArray[keyColumn], desArray[Column])
+						jobQueue.ProcessJobQueue <- &CallbackJob{types:UPDATE, srcArray:srcArray,callbackUrl:Config.Des[i].CallbackNotification.Url}
 					}else if srcArray[keyColumn] != desArray[Column] {
+						jobQueue.ProcessJobQueue <- &CallbackJob{types:UPDATE, srcArray:srcArray,callbackUrl:Config.Des[i].CallbackNotification.Url}
 						fmt.Println(srcId, "数据对不上:", srcArray[keyColumn], desArray[Column])
 					}
 

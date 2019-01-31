@@ -26,7 +26,8 @@ func (w *Worker) Start(workerPool jobQueue.WorkerChan) {
 			select {
 			case job := <-w.JobChannel:
 				if err := job.Do(); err != nil {
-					fmt.Printf("excute job failed with err: %v", err)
+					fmt.Printf("excute job failed with err: %v, 重新推入jobQueue\n", err)
+					jobQueue.ProcessJobQueue <- job
 				}
 				workerPool <- w.JobChannel
 				// recieve quit event, stop worker

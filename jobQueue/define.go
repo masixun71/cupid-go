@@ -9,3 +9,6 @@ type JobChan chan Job
 
 // define worker channer
 type WorkerChan chan JobChan
+
+
+var ProcessJobQueue JobChan
