@@ -1,20 +1,20 @@
 package worker
 
 import (
-	"../jobQueue"
-	"fmt"
+	. "../jobQueue"
+	"go.uber.org/zap"
 )
 
 type Worker struct {
-	JobChannel jobQueue.JobChan
+	JobChannel JobChan
 	quit       chan bool
-	workerPool jobQueue.WorkerChan
+	workerPool WorkerChan
 }
 
-func NewWorker(workerPool jobQueue.WorkerChan) *Worker  {
+func NewWorker(workerPool WorkerChan) *Worker  {
 
 	return &Worker{
-		JobChannel:make(chan jobQueue.Job),
+		JobChannel:make(chan Job),
 		quit: make(chan bool),
 		workerPool: workerPool,
 	}
@@ -23,7 +23,7 @@ func NewWorker(workerPool jobQueue.WorkerChan) *Worker  {
 
 func (w *Worker) Start() {
 	w.workerPool <- w.JobChannel
-	go func(workerPool jobQueue.WorkerChan) {
+	go func(workerPool WorkerChan) {
 		for {
 			select {
 			case job := <-w.JobChannel:
@@ -31,8 +31,8 @@ func (w *Worker) Start() {
 				job.IncrRetireTime()
 				workerPool <- w.JobChannel
 				if err != nil {
-					fmt.Printf("excute job failed with err: %v, 推入失败队列\n", err)
-					jobQueue.FailJobQueue <- job
+					Logger.Warn("worker执行job执行失败, 推入失败队列", zap.String("job", job.String()), zap.String("error", err.Error()))
+					FailJobQueue <- job
 				}
 				// recieve quit event, stop worker
 			case <-w.quit:

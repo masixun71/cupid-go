@@ -1,10 +1,10 @@
 package process
 
 import (
-	"../jobQueue"
+	. "../jobQueue"
 	"encoding/gob"
-	"fmt"
 	. "github.com/xiaonanln/go-xnsyncutil/xnsyncutil"
+	"go.uber.org/zap"
 	"os"
 	"time"
 )
@@ -28,7 +28,7 @@ func (p *FailProcess) Run() {
 	go func() {
 		for {
 			select {
-			case job := <-jobQueue.FailJobQueue:
+			case job := <- FailJobQueue:
 				p.tickSyncQueue.Push(job)
 			case <-p.quit:
 				return
@@ -41,17 +41,17 @@ func (p *FailProcess) Run() {
 		for {
 			select {
 			case <-t.C:
-				fmt.Println("执行失败queue")
+				Logger.Info("自定义时间间隔失败queue:开始处理")
 				len := p.tickSyncQueue.Len()
 				for i := 0; i < len; i++ {
 					if job, ok := p.tickSyncQueue.TryPop(); ok {
 						switch realJob := job.(type) {
-						case jobQueue.Job:
+						case Job:
 							err := realJob.Do()
 							realJob.IncrRetireTime()
 							if err != nil {
-								fmt.Printf("excute job failed with err: %v, 推入失败queue\n", err)
 								if realJob.GetRetireTime() <= 3 {
+									Logger.Warn("自定义时间间隔失败queue:job执行失败, 重新推入自定义时间间隔失败queue", zap.String("job", realJob.String()))
 									p.tickSyncQueue.Push(job)
 								} else {
 									p.TMSyncQueue.Push(job)
@@ -60,6 +60,7 @@ func (p *FailProcess) Run() {
 						}
 					}
 				}
+				Logger.Info("自定义时间间隔失败queue:处理完成")
 			case <- p.quit:
 				return
 
@@ -72,21 +73,22 @@ func (p *FailProcess) Run() {
 		for {
 			select {
 			case <-t.C:
-				fmt.Println("执行失败TMqueue")
+				Logger.Info("10Minutes,queue:开始处理")
 				len := p.TMSyncQueue.Len()
 				for i := 0; i < len; i++ {
 					if job, ok := p.TMSyncQueue.TryPop(); ok {
 						switch realJob := job.(type) {
-						case jobQueue.Job:
+						case Job:
 							err := realJob.Do()
 							realJob.IncrRetireTime()
 							if err != nil {
-								fmt.Printf("excute job failed with err: %v, 推入失败TMqueue\n", err)
+								Logger.Warn("10Minutes,queue:job执行失败, 重新推入10Minutes,queue", zap.String("job", realJob.String()))
 								p.TMSyncQueue.Push(job)
 							}
 						}
 					}
 				}
+				Logger.Info("10Minutes,queue:处理完成")
 			case <- p.quit:
 
 				return
@@ -95,10 +97,10 @@ func (p *FailProcess) Run() {
 	}(tickTM)
 
 	go func() {
-		var list []jobQueue.Job
+		var list []Job
 		file, err := os.Open(Config.Src.CacheFilePath + "/failJob.gob")
 		if err != nil {
-			fmt.Println(err)
+			Logger.Warn("打开缓存本地的失败job文件失败", zap.String("error", err.Error()))
 			return
 		}
 		gob.Register(&CallbackJob{})
@@ -106,7 +108,7 @@ func (p *FailProcess) Run() {
 		enc2 := gob.NewDecoder(file)
 		err3 := enc2.Decode(&list)
 		if err3 != nil {
-			fmt.Println("decode", err3)
+			Logger.Warn("解码失败job文件:fail", zap.String("error", err.Error()))
 			return
 		}
 		for _, job := range list {
@@ -127,14 +129,14 @@ func (p *FailProcess) Exit() {
 	gob.Register(&CompareCheckJob{})
 	file, err := os.Create(Config.Src.CacheFilePath + "/failJob.gob")
 	if err != nil {
-		fmt.Println(err)
+		Logger.Warn("创建缓存本地的失败job文件失败", zap.String("error", err.Error()))
 	}
-	list := make([]jobQueue.Job, 0)
+	list := make([]Job, 0)
 	enc := gob.NewEncoder(file)
 	for {
 		if job, ok := p.tickSyncQueue.TryPop(); ok {
 			switch realJob := job.(type) {
-			case jobQueue.Job:
+			case Job:
 				list = append(list, realJob)
 			}
 		} else {
@@ -144,7 +146,7 @@ func (p *FailProcess) Exit() {
 	for {
 		if job, ok := p.TMSyncQueue.TryPop(); ok {
 			switch realJob := job.(type) {
-			case jobQueue.Job:
+			case Job:
 				list = append(list, realJob)
 			}
 		} else {
@@ -153,7 +155,7 @@ func (p *FailProcess) Exit() {
 	}
 	err2 := enc.Encode(list)
 	if err2 != nil {
-		fmt.Println(err2)
+		Logger.Warn("编码失败job文件:fail", zap.String("error", err2.Error()))
 		return
 	}
 }

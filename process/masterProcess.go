@@ -1,7 +1,8 @@
 package process
 
 import (
-	"../jobQueue"
+	. "../jobQueue"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -33,13 +34,14 @@ func (p *MasterProcess) initTimer() {
 					maxId := GetMaxId()
 					if maxId > 0 {
 						for idManage.currentId <= uint(maxId) {
-							jobQueue.ProcessJobQueue <- &CompareCheckJob{Id: idManage.currentId}
+							ProcessJobQueue <- &CompareCheckJob{Id: idManage.currentId}
 							idManage.incrCurrentId()
 						}
 					}
 				case <- p.quit:
 					return
 				}
+				Logger.Info("当前insert定时扫描时间", zap.String("time", time.Now().Format("2006-1-2 15:04:05")))
 			}
 		}(tInsert, idManage)
 
@@ -54,13 +56,13 @@ func (p *MasterProcess) initTimer() {
 					updateIds := GetUpdateId()
 					if len(updateIds) > 0 {
 						for _, id := range updateIds {
-							jobQueue.ProcessJobQueue <- &CompareCheckJob{Id: uint(id)}
+							ProcessJobQueue <- &CompareCheckJob{Id: uint(id)}
 						}
 					}
 				case <- p.quit:
 					return
 				}
-				//fmt.Println("get tUpdate", time.Now().Format("2006-1-2 15:04:05"))
+				Logger.Info("当前update定时扫描时间", zap.String("time", time.Now().Format("2006-1-2 15:04:05")))
 			}
 		}(tUpdate)
 	}

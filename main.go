@@ -1,10 +1,10 @@
 package main
 
 import (
-	"./jobQueue"
+	. "./jobQueue"
 	"./process"
-	"fmt"
 	"github.com/jinzhu/configor"
+	"go.uber.org/zap"
 	"os"
 	"os/signal"
 	"sync"
@@ -13,26 +13,26 @@ import (
 
 func main() {
 
-
 	configor.Load(&process.Config, "/apps/conf/cupid/myConfigGo.json")
 
-	jobQueue.ProcessJobQueue = make(jobQueue.JobChan, process.Config.WorkerNumber)
-	jobQueue.CallbackJobQueue = make(jobQueue.JobChan, process.Config.WorkerNumber)
-	jobQueue.FailJobQueue = make(jobQueue.JobChan, process.Config.WorkerNumber)
+	InitLogger(process.Config.LogDir, "debug")
+	ProcessJobQueue = make(JobChan, process.Config.WorkerNumber)
+	CallbackJobQueue = make(JobChan, process.Config.WorkerNumber)
+	FailJobQueue = make(JobChan, process.Config.WorkerNumber)
 
-	callbackProcess := process.NewProcess(&process.CallbackProcess{}, 1, jobQueue.CallbackJobQueue)
+	callbackProcess := process.NewProcess(&process.CallbackProcess{}, 1, CallbackJobQueue)
 	failProcess := process.NewFailProcess()
 	callbackProcess.Run()
 	failProcess.Run()
 
-	masterProcess := process.NewProcess(&process.MasterProcess{}, process.Config.WorkerNumber, jobQueue.ProcessJobQueue)
+	masterProcess := process.NewProcess(&process.MasterProcess{}, process.Config.WorkerNumber, ProcessJobQueue)
 	masterProcess.Run()
 
 	InitSignal(masterProcess, callbackProcess, failProcess)
 
 }
 
-func InitSignal(masterProcess , callbackProcess *process.Process, failProcess *process.FailProcess) {
+func InitSignal(masterProcess, callbackProcess *process.Process, failProcess *process.FailProcess) {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -45,23 +45,23 @@ func InitSignal(masterProcess , callbackProcess *process.Process, failProcess *p
 
 			switch s {
 			case syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT:
-				fmt.Println("exit", s)
+				Logger.Info("进程收到退出信号", zap.String("signal", s.String()))
 				masterProcess.Exit()
-				fmt.Println("masterProcess退出成功")
+				Logger.Info("masterProcess退出成功")
 				callbackProcess.Exit()
-				fmt.Println("callbackProcess退出成功")
+				Logger.Info("callbackProcess退出成功")
 				failProcess.Exit()
-				fmt.Println("failProcess退出成功")
+				Logger.Info("failProcess退出成功")
 				wg.Done()
 				os.Exit(0)
 			case syscall.SIGUSR1: //kill -10 pid
 				//SetLogLevel("DEBUG")  //切换日志级别DEBUG
-				fmt.Println("usr1", s)
+				Logger.Info("进程收到SIGUSR1信号")
 			case syscall.SIGUSR2: //kill -12 pid
 				//SetLogLevel("ERROR")  //切换日志级别ERROR
-				fmt.Println("usr2", s)
+				Logger.Info("进程收到SIGUSR2信号")
 			default:
-				fmt.Println("other", s)
+				Logger.Info("进程收到其它信号", zap.String("signal", s.String()))
 			}
 		}
 	}(wg)
