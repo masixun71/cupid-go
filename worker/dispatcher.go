@@ -2,7 +2,6 @@ package worker
 
 import (
 	"../jobQueue"
-	"fmt"
 )
 
 type Dispatcher struct {
@@ -10,9 +9,10 @@ type Dispatcher struct {
 	quit         chan bool
 	workerNumber int
 	workerPool   jobQueue.WorkerChan
+	processQueue  jobQueue.JobChan
 }
 
-func NewDispatcher(workerNumber int) *Dispatcher {
+func NewDispatcher(workerNumber int, processQueue  jobQueue.JobChan) *Dispatcher {
 
 
 	return &Dispatcher{
@@ -20,31 +20,37 @@ func NewDispatcher(workerNumber int) *Dispatcher {
 		quit:         make(chan bool),
 		workerNumber: workerNumber,
 		workerPool: make(jobQueue.WorkerChan, workerNumber),
+		processQueue: processQueue,
 	}
 }
 
 func (d *Dispatcher) Run() {
 	for i := 0; i < d.workerNumber; i++ {
-		worker := NewWorker()
+		worker := NewWorker(d.workerPool)
 		d.workers = append(d.workers, worker)
-		worker.Start(d.workerPool)
+		worker.Start()
 	}
 
 	go func() {
 		for {
 			select {
-			case job := <-jobQueue.ProcessJobQueue:
+			case job := <- d.processQueue:
 					jobChan := <-d.workerPool
 					jobChan <- job
 				// stop dispatcher
 			case <-d.quit:
-				fmt.Print("error")
 				return
 			}
 		}
 	}()
 }
 
-func (d *Dispatcher) Consume(job jobQueue.Job)  {
-	jobQueue.ProcessJobQueue <- job
+
+func (d *Dispatcher) Exit() {
+	d.quit <- true
+	for _, worker := range d.workers {
+		worker.quit <- true
+	}
+
+
 }

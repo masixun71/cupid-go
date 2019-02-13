@@ -5,8 +5,8 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"strconv"
-	"../jobQueue"
 	"time"
+	"../jobQueue"
 )
 
 var (
@@ -38,13 +38,13 @@ func InitDb(maxIdleConns int) {
 
 func GetMaxId() int {
 
-	rows, err := srcDb.Query("SELECT max(id) as maxId from " + Config.Src.Table)
+	rows, err := srcDb.Query("SELECT max(Id) as maxId from " + Config.Src.Table)
 	defer rows.Close()
 	CheckErr(err)
 	var maxId int
 	for rows.Next() {
 		err = rows.Scan(&maxId)
-		fmt.Println("maxId", maxId)
+		//fmt.Println("maxId", maxId)
 		CheckErr(err)
 	}
 
@@ -56,7 +56,7 @@ func GetUpdateId() []int {
 	end := time.Now()
 	d, _ := time.ParseDuration("-"+ strconv.Itoa(Config.Src.UpdateScanSecond) + "s")
 	start := end.Add(d)
-	updateSql := "SELECT id from " + Config.Src.Table + " where " + Config.Src.UpdateColumn + " between '" + start.Format(Config.Src.UpdateTimeFormate) + "' and '" + end.Format(Config.Src.UpdateTimeFormate) + "'"
+	updateSql := "SELECT Id from " + Config.Src.Table + " where " + Config.Src.UpdateColumn + " between '" + start.Format(Config.Src.UpdateTimeFormate) + "' and '" + end.Format(Config.Src.UpdateTimeFormate) + "'"
 	rows, err := srcDb.Query(updateSql)
 	defer rows.Close()
 	CheckErr(err)
@@ -65,7 +65,7 @@ func GetUpdateId() []int {
 
 	for rows.Next() {
 		err = rows.Scan(&updateId)
-		fmt.Println("updateId", updateId)
+		//fmt.Println("updateId", updateId)
 		CheckErr(err)
 		ids = append(ids, updateId)
 	}
@@ -78,24 +78,24 @@ func GetUpdateId() []int {
 func CompareColumn(srcId uint) {
 
 
-	srcArray := query(srcDb, "SELECT * FROM "+Config.Src.Table+" where id= "+strconv.Itoa(int(srcId)))
+	srcArray := query(srcDb, "SELECT * FROM "+Config.Src.Table+" where Id= "+strconv.Itoa(int(srcId)))
 	if len(srcArray) != 0 {
 		lens := len(Config.Des)
 		for i := 0; i < lens; i++ {
 			desArray := query(desDb[i], "SELECT * FROM "+Config.Des[i].Table+" where "+Config.Des[i].ByColumn+"= "+ srcArray[Config.Src.ByColumn].(string))
 			if len(desArray) == 0 {
-				fmt.Println(srcId, "缺少数据:", srcArray)
-				jobQueue.ProcessJobQueue <- &CallbackJob{types:INSERT, srcArray:srcArray,callbackUrl:Config.Des[i].CallbackNotification.Url}
+				fmt.Println(srcId, "缺少数据:", SrcArray)
+				jobQueue.CallbackJobQueue <- &CallbackJob{Types: INSERT, SrcArray:srcArray, CallbackUrl:Config.Des[i].CallbackNotification.Url}
 			} else {
 				for keyColumn, Column := range Config.Des[i].Columns {
 					_, okSrc := srcArray[keyColumn]
 					_, okDes := desArray[Column]
 					if !okSrc || !okDes {
-						fmt.Println(srcId,"数据对不上:", srcArray[keyColumn], desArray[Column])
-						jobQueue.ProcessJobQueue <- &CallbackJob{types:UPDATE, srcArray:srcArray,callbackUrl:Config.Des[i].CallbackNotification.Url}
+						fmt.Println(srcId,"数据对不上:", SrcArray[keyColumn], desArray[Column])
+						jobQueue.CallbackJobQueue <- &CallbackJob{Types: UPDATE, SrcArray:srcArray, CallbackUrl:Config.Des[i].CallbackNotification.Url}
 					}else if srcArray[keyColumn] != desArray[Column] {
-						jobQueue.ProcessJobQueue <- &CallbackJob{types:UPDATE, srcArray:srcArray,callbackUrl:Config.Des[i].CallbackNotification.Url}
-						fmt.Println(srcId, "数据对不上:", srcArray[keyColumn], desArray[Column])
+						jobQueue.CallbackJobQueue <- &CallbackJob{Types: UPDATE, SrcArray:srcArray, CallbackUrl:Config.Des[i].CallbackNotification.Url}
+						fmt.Println(srcId, "数据对不上:", SrcArray[keyColumn], desArray[Column])
 					}
 
 				}

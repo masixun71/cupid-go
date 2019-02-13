@@ -10,27 +10,36 @@ import (
 )
 
 type CallbackJob struct {
-	types uint8
-	srcArray map[string]interface{}
-	callbackUrl string
-	retireTime uint
+	Types       uint8
+	SrcArray    map[string]interface{}
+	CallbackUrl string
+	RetireTime  int
 }
+
+func (f *CallbackJob) GetRetireTime() int {
+	return f.RetireTime
+}
+
+func (f *CallbackJob) IncrRetireTime() {
+	f.RetireTime++
+}
+
+
 
 func (f *CallbackJob) Do() error {
 
-	statusCode, err := samplePost(f.srcArray, f.callbackUrl)
+	statusCode, err := samplePost(f.SrcArray, f.CallbackUrl)
 	if err != nil || statusCode != 200 {
-		fmt.Println("数据同步补偿数据回调地址调用不成功,重新push到回调队列", f)
-		f.retireTime++
+		//fmt.Println("数据同步补偿数据回调地址调用不成功,重新push到失败队列", f)
 		if err != nil {
 			return err
 		} else {
 			return errors.New("回调返回statusCode:" + strconv.Itoa(statusCode))
 		}
 	} else {
-		fmt.Println("数据同步补偿数据回调成功", f)
+		//fmt.Println("数据同步补偿数据回调成功", f)
 	}
-	fmt.Println("数据同步补偿数据回调成功", f)
+	//fmt.Println("数据同步补偿数据回调成功", f)
 
 	return nil
 }

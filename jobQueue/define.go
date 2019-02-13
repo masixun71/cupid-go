@@ -2,6 +2,8 @@ package jobQueue
 
 type Job interface {
 	Do() error
+	GetRetireTime() int
+	IncrRetireTime()
 }
 
 // define job channel
@@ -12,5 +14,7 @@ type WorkerChan chan JobChan
 
 
 var ProcessJobQueue JobChan
+
+var CallbackJobQueue JobChan
 
 var FailJobQueue JobChan
