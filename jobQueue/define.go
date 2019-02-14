@@ -25,6 +25,9 @@ var CallbackJobQueue JobChan
 
 var FailJobQueue JobChan
 
+var StartId int
+
+
 var Logger *zap.Logger
 
 func InitLogger(logpath string, loglevel string) {

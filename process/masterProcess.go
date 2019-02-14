@@ -25,7 +25,7 @@ func (f *MasterProcess) Exit() {
 func (p *MasterProcess) initTimer() {
 
 	if Config.Src.Insert {
-		idManage := &idManager{currentId: 1}
+		idManage := &idManager{currentId: uint(StartId)}
 		tInsert := time.NewTicker(time.Millisecond * time.Duration(Config.Src.InsertIntervalMillisecond))
 		go func(t *time.Ticker, idManage *idManager) {
 			for {
