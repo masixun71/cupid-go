@@ -9,7 +9,6 @@ import (
 	"gopkg.in/urfave/cli.v2"
 	"os"
 	"os/signal"
-	"runtime"
 	"sort"
 	"sync"
 	"syscall"
@@ -53,7 +52,6 @@ func init() {
 	app.Before = func(ctx *cli.Context) error {
 		fmt.Println("cupid-go 程序已开启")
 
-		runtime.GOMAXPROCS(runtime.NumCPU())
 		return nil
 	}
 	app.After = func(c *cli.Context) error {
