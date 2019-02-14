@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type CallbackJob struct {
@@ -66,7 +67,7 @@ func samplePost(srcArray map[string]interface{}, callbackUrl string) (int, error
 	}
 	request.Header.Set("Content-Type", "application/json;charset=UTF-8")
 
-	client := &http.Client{}
+	client := &http.Client{Timeout:time.Second * 3}
 	resp, err := client.Do(request)
 	if err != nil {
 		return -1, err

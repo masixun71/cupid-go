@@ -86,7 +86,7 @@ func start(configPath string, startId int) {
 	CallbackJobQueue = make(JobChan, process.Config.WorkerNumber)
 	FailJobQueue = make(JobChan, process.Config.WorkerNumber)
 
-	callbackProcess := process.NewProcess(&process.CallbackProcess{}, 1, CallbackJobQueue)
+	callbackProcess := process.NewProcess(&process.CallbackProcess{}, process.Config.WorkerNumber, CallbackJobQueue)
 	failProcess := process.NewFailProcess()
 	callbackProcess.Run()
 	failProcess.Run()
