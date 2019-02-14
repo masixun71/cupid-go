@@ -79,8 +79,8 @@ https://github.com/masixun71/cupid-go/releases
 ./cupid -c /tmp/myConfig.json -s 1
 ```
 
-- **-c** 或者**--configPath**（必须）: config配置的路径，需要绝对路径 ，对config配置有问题可以看文档或者testConfig.json
-- **-s**或者**--startId**(非必须): 起始的数据库表id, 优先级： shell命令传入的start_id > 默认值1
+- **-c** 或者`--configPath`（必须）: config配置的路径，需要绝对路径 ，对config配置有问题可以看文档或者testConfig.json
+- **-s**或者`--startId`(非必须): 起始的数据库表id, 优先级： shell命令传入的start_id > 默认值1
 
 # 帮助
 
@@ -114,7 +114,7 @@ pushbear是一个基于微信模板的一对多消息送达服务，使用简单
 - type, 指的是变更类型，insert是1,update是2
 - srcColumn, 指的是源数据列，会把整个源数据传给你, 需要注意的一点 **srcColumn传的值若有的都是string类型，没有则是null**
 
-###回调接口时的超时时间为3秒
+### 回调接口时的超时时间为3秒
 
 ### 回调失败后会推入失败队列，等待重新回调
 
