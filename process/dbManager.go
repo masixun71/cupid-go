@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"go.uber.org/zap"
+	"reflect"
 	"strconv"
 	"time"
 )
@@ -91,16 +92,35 @@ func CompareColumn(srcId uint) {
 				for keyColumn, Column := range Config.Des[i].Columns {
 					_, okSrc := srcArray[keyColumn]
 					_, okDes := desArray[Column]
+					var configSrcByColumnValue string
+					var srcKeyColumnValue string
+					var desKeyColumnValue string
+					if reflect.ValueOf(srcArray[Config.Src.ByColumn]).IsNil() {
+						configSrcByColumnValue = "null"
+					} else {
+						configSrcByColumnValue = srcArray[Config.Src.ByColumn].(string)
+					}
+					if reflect.ValueOf(srcArray[keyColumn]).IsNil() {
+						srcKeyColumnValue = "null"
+					} else {
+						srcKeyColumnValue = srcArray[keyColumn].(string)
+					}
+					if reflect.ValueOf(desArray[Column]).IsNil() {
+						desKeyColumnValue = "null"
+					} else {
+						desKeyColumnValue = desArray[Column].(string)
+					}
+
 					if !okSrc || !okDes {
 						Logger.Warn("数据比对，发现des数据错误, 发送至update回调", zap.Int("srcId", int(srcId)),
 							zap.String("srcTable", Config.Src.Table),
 							zap.String("desTable", Config.Des[i].Table),
 							zap.String("desByColumn", Config.Des[i].ByColumn),
-							zap.String("desByColumnValue", srcArray[Config.Src.ByColumn].(string)),
+							zap.String("desByColumnValue", configSrcByColumnValue),
 							zap.String("srcKeyColumn", keyColumn),
-							zap.String("srcKeyColumnValue", srcArray[keyColumn].(string)),
+							zap.String("srcKeyColumnValue", srcKeyColumnValue),
 							zap.String("desKeyColumn", Column),
-							zap.String("desKeyColumnValue", desArray[Column].(string)),
+							zap.String("desKeyColumnValue", desKeyColumnValue),
 						)
 						CallbackJobQueue <- &CallbackJob{Types: UPDATE, SrcArray: srcArray, CallbackUrl: Config.Des[i].CallbackNotification.Url}
 					} else if srcArray[keyColumn] != desArray[Column] {
@@ -108,11 +128,11 @@ func CompareColumn(srcId uint) {
 							zap.String("srcTable", Config.Src.Table),
 							zap.String("desTable", Config.Des[i].Table),
 							zap.String("desByColumn", Config.Des[i].ByColumn),
-							zap.String("desByColumnValue", srcArray[Config.Src.ByColumn].(string)),
+							zap.String("desByColumnValue", configSrcByColumnValue),
 							zap.String("srcKeyColumn", keyColumn),
-							zap.String("srcKeyColumnValue", srcArray[keyColumn].(string)),
+							zap.String("srcKeyColumnValue", srcKeyColumnValue),
 							zap.String("desKeyColumn", Column),
-							zap.String("desKeyColumnValue", desArray[Column].(string)),
+							zap.String("desKeyColumnValue", desKeyColumnValue),
 						)
 						CallbackJobQueue <- &CallbackJob{Types: UPDATE, SrcArray: srcArray, CallbackUrl: Config.Des[i].CallbackNotification.Url}
 					}
