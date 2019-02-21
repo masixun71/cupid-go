@@ -8,8 +8,6 @@ import (
 var Config = struct {
 	WorkerNumber                      int    `default:"3"`
 	LogDir                            string `default:"/apps/log/cupid"`
-	CallbackWorkerIntervalMillisecond uint16 `default:"1000"`
-	TaskWorkerIntervalMillisecond     uint16 `default:"1000"`
 	FailureJobRetrySecond             int    `default:"10"`
 	Src                               struct {
 		Dsn                       string
