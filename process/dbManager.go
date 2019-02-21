@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"go.uber.org/zap"
-	"reflect"
 	"strconv"
 	"time"
 )
@@ -92,24 +91,9 @@ func CompareColumn(srcId uint) {
 				for keyColumn, Column := range Config.Des[i].Columns {
 					_, okSrc := srcArray[keyColumn]
 					_, okDes := desArray[Column]
-					var configSrcByColumnValue string
-					var srcKeyColumnValue string
-					var desKeyColumnValue string
-					if reflect.ValueOf(srcArray[Config.Src.ByColumn]).IsNil() {
-						configSrcByColumnValue = "null"
-					} else {
-						configSrcByColumnValue = srcArray[Config.Src.ByColumn].(string)
-					}
-					if reflect.ValueOf(srcArray[keyColumn]).IsNil() {
-						srcKeyColumnValue = "null"
-					} else {
-						srcKeyColumnValue = srcArray[keyColumn].(string)
-					}
-					if reflect.ValueOf(desArray[Column]).IsNil() {
-						desKeyColumnValue = "null"
-					} else {
-						desKeyColumnValue = desArray[Column].(string)
-					}
+					var configSrcByColumnValue = GetStringValue(srcArray[Config.Src.ByColumn])
+					var srcKeyColumnValue = GetStringValue(srcArray[keyColumn])
+					var desKeyColumnValue = GetStringValue(desArray[Column])
 
 					if !okSrc || !okDes {
 						Logger.Warn("数据比对，发现des数据错误, 发送至update回调", zap.Int("srcId", int(srcId)),
@@ -173,6 +157,20 @@ func query(db *sql.DB, sql string) map[string]interface{} {
 
 	return record
 }
+
+func GetStringValue(val interface{}) string {
+
+	switch val.(type) {
+	case string:
+		return val.(string)
+	case nil:
+		return "null"
+	default:
+		return "null"
+	}
+}
+
+
 
 func CheckErr(err error) {
 	if err != nil {
