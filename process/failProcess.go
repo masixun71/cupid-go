@@ -54,6 +54,7 @@ func (p *FailProcess) Run() {
 									Logger.Warn("自定义时间间隔失败queue:job执行失败, 重新推入自定义时间间隔失败queue", zap.String("job", realJob.String()))
 									p.tickSyncQueue.Push(job)
 								} else {
+									PushBear("数据同步补偿数据回调重试已超过3次", "err:" + err.Error() + "\n\njob:" + realJob.String())
 									p.TMSyncQueue.Push(job)
 								}
 							}
@@ -82,6 +83,7 @@ func (p *FailProcess) Run() {
 							err := realJob.Do()
 							realJob.IncrRetireTime()
 							if err != nil {
+								PushBear("数据同步补偿数据回调重试已超过3次", "err:" + err.Error() + "\n\njob:" + realJob.String())
 								Logger.Warn("10Minutes,queue:job执行失败, 重新推入10Minutes,queue", zap.String("job", realJob.String()))
 								p.TMSyncQueue.Push(job)
 							}

@@ -51,7 +51,7 @@ https://github.com/masixun71/cupid-go/releases
         "updateScanSecond": 5, //update为true时必填,获取数据的时间间隔，当前时间减去updateScanSecond设的时间为开始时间，当前时间为结束时间
         "updateTimeFormate": "Y-m-d H:i:s", //update为true时必填,数据库里数据更新字段的时间格式
         "cacheFilePath": "/tmp", //若进程有异常退出或者重启，会把当前的遍历信息记录到缓存文件中，重启时直接读取缓存文件
-        "pushbearSendKey": "9724-73bdacb319007f53f83d0123213b4ec964"//若需要pushbear推送微信消息，在这填写
+        "pushbearSendKey": "9724-73bdacb319007f53f83d0123"//若需要pushbear推送微信消息，在这填写
     },
     "des": [//des是一个数组，意味着我们可同时比对多个数据表
         {
@@ -153,7 +153,7 @@ loglevel=debug
 
 
 
-# todo
+# 线上测试
 
-- pushbear 正在接入
-- 处理id还未打印，内存损耗未统计
+- pushbear已接入
+- 对线上520w的表数据进行测试，大约25分钟处理加回调完成（回调完全成功不存在重试），内存消耗维持在10MB以下，vmRSS在11MB左右

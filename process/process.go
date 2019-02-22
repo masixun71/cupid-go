@@ -21,6 +21,7 @@ var Config = struct {
 		UpdateScanSecond          int    `default:"5"`
 		UpdateTimeFormate         string `default:"2006-1-2 15:04:05"`
 		CacheFilePath             string `default:"/tmp"`
+		PushbearSendKey			  string `default:""`
 	}
 	Des []struct {
 		Dsn                  string
