@@ -1,6 +1,6 @@
 
 
-![](https://img.shields.io/badge/version-v0.0.1-red.svg)
+![](https://img.shields.io/badge/version-v0.0.4-red.svg)
 ![](https://img.shields.io/badge/go-orange.svg)
 ![](https://img.shields.io/badge/多平台-blue.svg)
 
@@ -10,6 +10,10 @@ Data synchronization compensation tool
 
 # 简介
 cupid-go是一个消息同步补偿工具，适用于在`canal`这类的实时同步数据中间件之外的同步补偿工具，也适用于实时缓存这类的及时更新工具，对数据同步进行双保险，一般`canal`的延迟在毫秒左右，`cupid`建议设置在秒左右，做补偿专用，`canal`的消费端嵌入业务代码可以更方便开发和消费，`cupid`作为更通用的补偿方案,所以建议不要嵌入业务代码，补偿机制采用http回调来保证，失败会重试直到成功，若回调失败会通知（目前采用`pushbear`微信即时通知,简单即时）。
+
+# 线上已正常运行版本
+
+- v0.0.4以上
 
 
 # 环境要求
