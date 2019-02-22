@@ -81,7 +81,7 @@ func CompareColumn(srcId uint) {
 	if len(srcArray) != 0 {
 		lens := len(Config.Des)
 		for i := 0; i < lens; i++ {
-			desArray := query(desDb[i], "SELECT * FROM "+Config.Des[i].Table+" where "+Config.Des[i].ByColumn+"= "+srcArray[Config.Src.ByColumn].(string))
+			desArray := query(desDb[i], "SELECT * FROM "+Config.Des[i].Table+" where "+Config.Des[i].ByColumn+"= '"+srcArray[Config.Src.ByColumn].(string) + "'")
 			if len(desArray) == 0 {
 				Logger.Warn("数据比对，发现des数据缺少, 发送至insert回调", zap.Int("srcId", int(srcId)),
 					zap.String("srcTable", Config.Src.Table),
