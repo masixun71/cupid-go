@@ -34,6 +34,8 @@ func (p *MasterProcess) initTimer() {
 					maxId := GetMaxId()
 					if maxId > 0 {
 						for idManage.currentId <= uint(maxId) {
+
+							Logger.Info("当前insert遍历到的Id", zap.Uint("id", idManage.currentId))
 							ProcessJobQueue <- &CompareCheckJob{Id: idManage.currentId}
 							idManage.incrCurrentId()
 						}

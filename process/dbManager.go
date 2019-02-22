@@ -75,6 +75,8 @@ func GetUpdateId() []int {
 
 func CompareColumn(srcId uint) {
 
+	Logger.Info("当前compareJob处理的Id", zap.Uint("id", srcId))
+
 	srcArray := query(srcDb, "SELECT * FROM "+Config.Src.Table+" where Id= "+strconv.Itoa(int(srcId)))
 	if len(srcArray) != 0 {
 		lens := len(Config.Des)
